@@ -1,0 +1,1496 @@
+# Machine Learning
+# Get acquainted with the data
+# iris is available from the datasets package
+
+# Reveal number of observations and variables in two different ways
+dim(iris)
+str(iris)
+
+# Show first and last observations in the iris data set
+head(iris)
+tail(iris)
+
+# Summarize the iris data set
+summary(iris)
+
+# ******************************************************************************************
+# What is machine learning?
+# Part of excelling at machine learning is knowing when you're dealing with a machine learning problem in the first place. Machine learning is more than simply computing averages or performing some data manipulation. 
+# It actually involves making predictions about observations based on previous information.
+
+# Both spam detection and photo recognition are common examples of classification. And hence, machine learning.
+
+# ****************************************************************************************
+# Wage data set is in ISLR package
+install.packages('ISLR')
+library(ISLR)
+
+dim(Wage)
+str(Wage)
+
+# Build Linear Model: lm_wage (coded already)
+lm_wage <- lm(wage ~ age, data = Wage)
+
+# Define data.frame: unseen (coded already)
+unseen <- data.frame(age = 60)
+
+# Predict the wage for a 60-year old worker
+# You can use the predict() function for this. This generic function takes a model as the first argument. 
+# The second argument should be some unseen observations as a data frame. 
+# predict() is then able to predict outcomes for these observations.
+
+predict(lm_wage, unseen)
+
+# Based on the linear model that was estimated from the Wage dataset, you predicted the average wage for a 60 year old worker to be around 124 USD a day. 
+
+# ****************************************************************************************
+# Classification: Filtering Spam
+# Identifying whether a letter is or isn't present in a handwritten text is a perfect example of a classification problem. You know in advance there are two possible categories: Either a scribble is the Letter S or it is not! It's time to tackle a very common classification problem: Spam Filtering. 
+
+# Filtering spam from relevant emails is a typical machine learning task. Information such as word frequency, character frequency and the amount of capital letters can indicate whether an email is spam or not.
+# In the following exercise you'll work with the dataset emails, which is loaded in your workspace (Source: UCI Machine Learning Repository). 
+# Here, several emails have been labeled by humans as spam (1) or not spam (0) and the results are found in the column spam. The considered feature in emails is avg_capital_seq. 
+# It is the average amount of sequential capital letters found in each email.
+
+emails <- read.table("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/spambase.data.txt", sep = ",")
+emails_names <- read.table("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/spambase.names.csv", sep = ",")
+
+emails_names
+emails_names <- as.character(emails_names[,1])
+emails_names[55] <- "avg_capital_seq"
+emails_names <- c(emails_names, "spam")
+str(emails_names)
+
+colnames(emails) <- emails_names
+emails$spam <- as.factor(emails$spam)
+
+# In the following exercise you'll work with the dataset emails, which is loaded in your workspace (Source: UCI Machine Learning Repository). Here, several emails have been labeled by humans as spam (1) or not spam (0) and the results are found in the column spam. The considered feature in emails is avg_capital_seq. It is the average amount of sequential capital letters found in each email.
+# In the code, you'll find a crude spam filter we built for you, spam_classifier() that uses avg_capital_seq to predict whether an email is spam or not.
+# Your job is to inspect the emails dataset, apply spam_classifier to it and compare the outcome with the true labels! If you want to play some more with the emails dataset
+
+# Show the dimensions of emails
+dim(emails)
+
+# Inspect definition of spam_classifier()
+spam_classifier <- function(x){
+  prediction <- rep(NA,length(x))
+  prediction[x > 4] <- 1
+  prediction[x >= 3 & x <= 4] <- 0
+  prediction[x >= 2.2 & x < 3] <- 1
+  prediction[x >= 1.4 & x < 2.2] <- 0
+  prediction[x > 1.25 & x < 1.4] <- 1
+  prediction[x <= 1.25] <- 0
+  return(prediction)
+}
+
+# Apply the classifier to the avg_capital_seq column: spam_pred
+spam_pred <- spam_classifier(emails$avg_capital_seq)
+
+# Compare spam_pred to emails$spam. Use ==
+sum(spam_pred == emails$spam)
+
+# ****************************************************************************************
+# Regression: Linkedin views for the next 3 days
+# linkedin is already available in the workspace
+
+# Create the days vector
+days <- 1:21
+
+# Fit a linear model called on the linkedin views per day: linkedin_lm
+linkedin_lm <- lm(linkedin ~ days)
+
+# Predict the number of views for the next three days: linkedin_pred
+future_days <- data.frame(days = 22:24)
+linkedin_pred <- predict(linkedin_lm, future_days)
+
+# Plot historical data and predictions
+plot(linkedin ~ days, xlim = c(1, 24))
+points(22:24, linkedin_pred, col = "green")
+
+# ***************************************************************************************
+# Clustering: Separating the iris species
+# This technique tries to group your objects. It does this without any prior knowledge of what these groups could or should look like. 
+# In this case, the concepts of prior knowledge and unseen observations are less meaningful than for classification and regression.
+
+# In this exercise, you'll group irises in 3 distinct clusters, based on several flower characteristics in the iris dataset. 
+# It has already been chopped up in a data frame my_iris and a vector species, as shown in the sample code on the right. 
+# The clustering itself will be done with the kmeans() function. How the algorithm actually works, will be explained in the last chapter. 
+# For now, just try it out to gain some intuition!
+# Note: In problems that have a random aspect (like kmeans()), the set.seed() function will be used to enforce reproducibility. 
+# If you fix the seed, the random numbers that are generated afterwards are always the same.
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Chop up iris in my_iris and species
+head(iris)
+my_iris <- iris[-5]
+species <- iris$Species
+
+# Perform k-means clustering on my_iris: kmeans_iris
+kmeans_iris <- kmeans(my_iris, centers = 3)
+
+# Compare the actual Species to the clustering using table()
+table(species, kmeans_iris$cluster)
+
+# Plot Petal.Width against Petal.Length, coloring by cluster
+plot(Petal.Length ~ Petal.Width, data = my_iris, col = kmeans_iris$cluster)
+plot(Petal.Length ~ Petal.Width, data = my_iris, col = species)
+plot(Petal.Length ~ Petal.Width, data = iris, col = species)
+
+# Did you see those clusters? The table() function that the groups the clustering came up with, largely correspond to the actual species of the different observations. Now that you've tried regression, classification and clustering problems, it's time to delve a little into the differences between these three techniques. 
+
+# ***************************************************************************************
+# Supervised Learning
+# In the previous exercises, you used kmeans() to perform clustering on the iris dataset. 
+# Remember that you created your own copy of the dataset, and dropped the Species attribute? That's right, you removed the labels of the observations.
+# In this exercise, you will use the same dataset. But instead of dropping the Species labels, you will use them do some supervised learning!
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Take a look at the iris dataset
+str(iris)
+summary(iris)
+
+# A decision tree model has been built for you
+library(rpart)
+tree <- rpart(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width,
+              data = iris, method = "class")
+
+# A dataframe containing unseen observations
+unseen <- data.frame(Sepal.Length = c(5.3, 7.2), 
+                     Sepal.Width = c(2.9, 3.9), 
+                     Petal.Length = c(1.7, 5.4), 
+                     Petal.Width = c(0.8, 2.3))
+
+# Predict the label of the unseen observations. Print out the result.
+predict(tree, unseen, type = "class")
+predict(tree, unseen)
+
+# ***************************************************************************************
+# Unsupervised learning
+# In this exercise, you will group cars based on their horsepower and their weight. 
+# You can find the types of car and corresponding attributes in the cars data frame, which has been derived from the mtcars dataset. It's available in the workspace.
+# To cluster the different observations, you will once again use kmeans().
+# In short, your job is to cluster the cars in 2 groups, but don't forget to explore the dataset first!
+
+cars <- mtcars[c(6, 4)]
+head(cars)
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Explore the cars dataset
+str(cars)
+summary(cars)
+
+# Group the dataset into two clusters: km_cars
+km_cars <- kmeans(cars, centers = 2)
+
+# Print out the contents of each cluster
+km_cars$cluster
+
+# You can see, for example, that the Ferrari Dino is in cluster 2, while the Fiat X1-9 is grouped in cluster 1. 
+# However, if you would like a more comprehensive overview of the results, you should definitely visualize them! 
+# Head over the next exercise and find out how! 
+
+# ***************************************************************************************
+# Unsupervised Learning - Visualization
+# An important part in machine learning is understanding your results. In the case of clustering, visualization is key to interpretation! One way to achieve this is by plotting the features of the cars and coloring the points based on their corresponding cluster.
+# In this exercise you'll summarize your results in a comprehensive figure. 
+# The dataset cars is already available in the workspace; the code to perform the clustering is already available.
+
+# Add code: color the points in the plot based on the clusters
+plot(cars, col = km_cars$cluster)
+
+# Print out the cluster centroids
+km_cars$centers
+
+# Replace the ___ part: add the centroids to the plot
+points(km_cars$centers, pch = 22, bg = c(1, 2), cex = 2)
+
+# The same plot with ggplot
+ggplot(cars, aes(x = wt, y = hp, col = factor(km_cars$cluster))) +
+  geom_point() +
+  annotate(geom = "point", x = km_cars$centers[, 1], y = km_cars$centers[, 2], 
+           size = 5, color = c("red", "blue"))
+
+# refer the below code *****************************************************************
+cl <- kmeans(iris[, 1:2], 3, nstart = 25)
+ggplot(transform(iris[, 1:2], cl = factor(cl$cluster)), 
+       aes(x = Sepal.Length, y = Sepal.Width, colour = cl)) +
+  geom_point() + 
+  scale_colour_manual(values=c("purple", "green","orange")) + 
+  annotate("point", x = cl$centers[, 1], y = cl$centers[, 2], size = 5, colour = c("purple", "green","orange")) + 
+  annotate("text", x = cl$centers[, 1], y = cl$centers[, 2], font = 2, size = 10,
+           label = apply(cl$centers, 1, function(x) paste(sprintf('%02.2f', x), collapse = ",") ), 
+           colour = c("purple", "green","orange"))
+
+
+# The cluster centroids are typically good representations of all the observations in a cluster. 
+# They are often used to summarize your clusters. Head over to the next exercise! 
+
+# ***************************************************************************************
+# Performance Measure for Decision Tree: Confusion Matrix
+titanic_full <- read.csv("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/titanic_dataset.csv")
+str(titanic_full)
+
+titanic <- titanic_full[c(2, 3, 5, 6)]
+str(titanic)
+titanic$Survived <- as.factor(titanic$Survived)
+head(titanic)
+
+# In this exercise a decision tree is learned on this dataset. The tree aims to predict whether a person would have survived the accident based on the variables Age, Sex and Pclass (travel class). 
+# The decision the tree makes can be deemed correct or incorrect if we know what the person's true outcome was. 
+# Since the true fate of the passengers, Survived, is also provided in titanic, you can compare it to the prediction made by the tree. 
+# As you've seen in the video, the results can be summarized in a confusion matrix. 
+# In R, you can use the table() function for this.
+
+# A decision tree classification model is built on the data
+tree <- rpart(Survived ~ ., data = titanic, method = "class")
+
+# Use the predict() method to make predictions, assign to pred
+pred <- predict(tree, titanic, type = "class")
+
+# Use the table() method to make the confusion matrix
+# Build the confusion matrix with the table() function. This function builds a contingency table. 
+# The first argument corresponds to the rows in the matrix and should be the Survived column of titanic: the true labels from the data. The second argument, corresponding to the columns, should be pred: the tree's predicted labels.
+conf <- table(titanic$Survived, pred)
+
+# So to summarize, 248 out of all 342 survivors were correctly predicted to have survived. 
+# On the other hand, 479 out of the 549 deceased were correctly predicted to have perished. 
+
+# ***************************************************************************************
+# The confusion matrix from the last exercise provides you with the raw performance of the decision tree:
+
+# The survivors correctly predicted to have survived: true positives (TP)
+# The deceased who were wrongly predicted to have survived: false positives (FP)
+# The survivors who were wrongly predicted to have perished: false negatives (FN)
+# The deceased who were correctly predicted to have perished: true negatives (TN)
+
+conf
+
+# Assign TP, FN, FP and TN using conf
+TP <- conf[2, 2]
+FP <- conf[1, 2]
+TN <- conf[1, 1]
+FN <- conf[2, 1]
+
+# Calculate and print the accuracy: acc
+acc <- (TP + TN) / (TP + TN + FP + FN)
+acc
+
+# Calculate and print out the precision: prec
+prec <- TP / (TP + FP) 
+prec
+
+# Calculate and print out the recall: rec
+rec <- TP / (TP + FN)
+rec
+
+# With an accuracy of around 82%, the model only incorrectly predicted 18% of the passengers' fates. 
+# Overall you have an acceptable, but not truly satisfying classifier.
+
+# ***************************************************************************************
+# The quality of Regression: Root Mean Squared Methods
+
+air <- read.table("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/airfoil_self_noise.dat.txt")
+colnames(air) <- c("freq", "angle", "ch_length", "velocity", "thickness", "dec")
+head(air)
+str(air)
+
+fit <- lm(dec ~ freq + angle + ch_length, data = air)
+summary(fit)
+
+# Use the model to predict for all values: pred
+pred <- predict(fit)
+
+# Use air$dec and pred to calculate the RMSE 
+rmse <- sqrt(sum( (air$dec - pred) ^ 2 ) / length(air$dec))
+
+# Print out rmse
+rmse
+
+# So the RMSE is given by 5 . 5 what? Well 5 decibels, the unit of the sound pressure, your response variable. As a standalone number, it doesn't tell you a whole bunch. 
+# In order to derive its meaning, it should be compared to the RMSE of a different model for the same problem, which is exactly what you'll do in the next exercise! 
+
+# ***************************************************************************************
+# Adding complexity to increase quality
+
+# In the last exercise, your team's model had 3 predictors (input variables), but what if you included more predictors? 
+# You have the measurements on free-stream velocity, velocity and suction side displacement thickness, thickness available for use in the air dataset as well! 
+
+# Your colleague's more complex model
+fit2 <- lm(dec ~ ., data = air)
+summary(fit2)
+
+# Use the model to predict for all values: pred2
+pred2 <- predict(fit2)
+
+# Calculate rmse2
+rmse2 <- sqrt(sum( (air$dec - pred2) ^ 2 ) / nrow(air))
+
+# Print out rmse2
+rmse2
+
+anova(fit, fit2)
+
+# ***************************************************************************************
+# Performance measure for Clustering
+seeds <- read.table("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/seeds_dataset.txt")
+head(seeds)
+colnames(seeds) <- c("area", "perimeter", "compactness", "length", "width", 
+                     "asymmetry", "groove_length", "seed")
+
+head(seeds)
+seeds$seed <- as.factor(seeds$seed)
+
+# The seeds dataset is already loaded into your workspace
+
+# Set random seed. Don't remove this line
+set.seed(1)
+
+# Explore the structure of the dataset
+str(seeds)
+
+# Group the seeds in three clusters
+km_seeds <- kmeans(x = seeds[-8], centers = 3)
+
+# Color the points in the plot based on the clusters
+library(ggplot2)
+ggplot(seeds, aes(x = compactness, y = length, col = factor(km_seeds$cluster))) +
+  geom_point() +
+  scale_color_discrete("Cluster")
+
+plot(length ~ compactness, data = seeds, col = km_seeds$cluster)
+
+# Print out the ratio of the WSS to the BSS (Within Sum of Squares to Between Sum of Squares)
+# These measures can be found in the cluster object km_seeds as tot.withinss and betweenss
+
+# WSS
+km_seeds$withinss
+km_seeds$tot.withinss
+
+# BSS
+km_seeds$betweenss
+
+# Ratio WSS/BSS
+km_seeds$tot.withinss / km_seeds$betweenss
+
+# confusion matrix
+table(seeds$seed, km_seeds$cluster)
+
+# ***************************************************************************************
+# If you want to build a system that can automatically categorize email as spam or not, a confusion matrix can help you assess its quality.
+# The confusion matrix will show you how many emails you correctly classified as spam, how many you incorrectly classified as not spam, and so on. 
+# It will help you select the best classification system. 
+
+
+# ***************************************************************************************
+#  Split the dataset
+
+# Let's return to the titanic dataset for which we set up a decision tree. 
+# In exercises 2 and 3 you calculated a confusion matrix to assess the tree's performance. 
+# However, the tree was built using the entire set of observations. 
+# Therefore, the confusion matrix doesn't assess the predictive power of the tree. 
+# The training set and the test set were one and the same thing: this can be improved!
+# First, you'll want to split the dataset into train and test sets. 
+# You'll notice that the titanic dataset is sorted on titanic$Survived , so you'll need to first shuffle the dataset in order to have a fair distribution of the output variable in each set.
+# For example, you could use the following commands to shuffle a data frame df and divide it into training and test sets with a 60/40 split between the two.
+
+n <- nrow(df)
+shuffled_df <- df[sample(n), ]
+train_indices <- 1:round(0.6 * n)
+train <- shuffled_df[train_indices, ]
+test_indices <- (round(0.6 * n) + 1):n
+test <- shuffled_df[test_indices, ]
+
+
+titanic_full <- read.csv("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/titanic_dataset.csv")
+str(titanic_full)
+
+titanic <- titanic_full[c(2, 3, 5, 6)]
+str(titanic)
+titanic$Survived <- as.factor(titanic$Survived)
+head(titanic)
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Shuffle the dataset, call the result shuffled
+n <- nrow(titanic)
+shuffled <- titanic[sample(n), ]
+head(shuffled)
+
+# Split the data in train and test (70/30) 
+train_indices <- 1:round(0.7 * n)
+test_indices <- (round(0.7 * n) + 1):n
+
+train <- shuffled[train_indices, ]
+test <- shuffled[test_indices, ]
+
+# Print the structure of train and test
+str(train)
+str(test)
+
+# You've successfully split the entire dataset into a training set and a test set. 
+# Now you are ready to build a model on the training set, and to test its predictive ability on a test set. 
+
+# ***************************************************************************************
+# First Train then Test
+# Time to redo the model training from before. The titanic data frame is again available in the workspace. 
+# This time, however, you'll want to build a decision tree on the training set, and next assess its predictive power on a set that has not been used for training: the test set.
+# On the right, the code that splits titanic up in train and test has already been included. 
+# Also, the old code that builds a decision tree on the entire set is included. 
+# Up to you to correct it and connect the dots to get a good estimate of the model's predictive ability.
+
+# Fill in the model that has been learned.
+library(rpart)
+tree <- rpart(Survived ~ ., data = train, method = "class")
+
+# Predict the outcome on the test set with tree: pred
+pred <- predict(tree, test, type = "class")
+str(pred)
+
+# Calculate the confusion matrix: conf
+conf <- table(test$Survived, pred)
+
+# Print this confusion matrix
+conf
+
+# The confusion matrix reveals an accuracy of (62+152)/(62+26+27+152) = 80.14%. 
+# This is less than the 81.65% you calculated in the first section of this chapter. 
+# However, this is a much more trustworthy estimate of the model's true predictive power. 
+
+# ***************************************************************************************
+# Another way of Measuring Performance: Cross Validation
+# In this exercise, you will fold the dataset 6 times and calculate the accuracy for each fold. The mean of these accuracies forms a more robust estimation of the model's true accuracy of predicting unseen data, because it is less dependent on the choice of training and test set.
+# Note: Other performance measures, such as recall or precision, could also be used here.
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Initialize the accs vector
+accs <- rep(0,6)
+
+for (i in 1:6) {
+  # These indices indicate the interval of the test set
+  indices <- (((i-1) * round((1/6)*nrow(shuffled))) + 1):((i*round((1/6) * nrow(shuffled))))
+  
+  # Exclude them from the train set
+  train <- shuffled[-indices,]
+  
+  # Include them in the test set
+  test <- shuffled[indices,]
+  
+  # A model is learned using each training set
+  tree <- rpart(Survived ~ ., train, method = "class")
+  
+  # Make a prediction on the test set using tree
+  pred <- predict(tree, test, type = "class")
+  
+  # Assign the confusion matrix to conf
+  conf <- table(test$Survived, pred)
+  
+  # Assign the accuracy of this model to the ith index in accs
+  accs[i] <- sum(diag(conf))/sum(conf)
+}
+
+# Print out the mean of accs
+mean(accs)
+
+# You just programmed a cross validation algorithm, not bad! 
+# This estimate will be a more robust measure of your accuracy. 
+# It will be less susceptible to the randomness of splitting the dataset.
+
+# ***************************************************************************************
+# How many folds?
+# Let's say you're doing cross validation on a dataset with 22680 observations. This number is stored as n in your workspace. You want the training set to contain 21420 entries, saved as tr. How many folds can you use for your cross validation? 
+# In other words, how many iterations with other test sets can you do on the dataset?
+# The question is not how many times your training fits in your complete dataset. 
+# The question is how many times your test set fits in your dataset! 
+
+# Ans: 18
+
+# ***************************************************************************************
+# Overfitting the spam
+
+# The spam filter that has been 'learned' for you
+spam_classifier <- function(x){
+  prediction <- rep(NA,length(x))
+  prediction[x > 4] <- 1
+  prediction[x >= 3 & x <= 4] <- 0
+  prediction[x >= 2.2 & x < 3] <- 1
+  prediction[x >= 1.4 & x < 2.2] <- 0
+  prediction[x > 1.25 & x < 1.4] <- 1
+  prediction[x <= 1.25] <- 0
+  return(factor(prediction, levels=c("1","0")))
+}
+
+# Apply spam_classifier to emails_full: pred_full
+pred_full <- spam_classifier(emails_full$avg_capital_seq)
+
+# Build confusion matrix for emails_full: conf_full
+conf_full <- table(emails_full$spam, pred_full)
+
+# Calculate the accuracy with conf_full: acc_full
+acc_full <- sum(diag(conf_full)) / sum(conf_full)
+
+# Print acc_full
+acc_full
+
+# ***************************************************************************************
+# Increasing the bias
+# It's official now, the spam_classifier from chapter 1 is bogus. It simply overfits on the emails_small set and as a result doesn't generalize to larger dataset such as emails_full.
+# So let's try something else. On average, emails with a high frequency of sequential capital letters are spam. What if you simply filtered spam based on one threshold for avg_capital_seq?
+# For example, you could filter all emails with avg_capital_seq > 4 as spam. By doing this, you increase the interpretability of the classifier and restrict its complexity. However, this increases the bias, i.e. the error due to restricting your model.
+# Your job is to simplify the rules of spam_classifier and calculate the accuracy for the full set emails_full. Next, compare it to that of the small set emails_small, which is coded for you. Does the model generalize now?
+
+# The all-knowing classifier that has been learned for you
+# You should change the code of the classifier, simplifying it
+spam_classifier <- function(x){
+  prediction <- rep(NA,length(x))
+  prediction[x > 4] <- 1
+  prediction[x <= 4] <- 0
+  return(factor(prediction, levels=c("1","0")))
+}
+
+# conf_small and acc_small have been calculated for you
+conf_small <- table(emails_small$spam, spam_classifier(emails_small$avg_capital_seq))
+acc_small <- sum(diag(conf_small)) / sum(conf_small)
+acc_small
+
+# Apply spam_classifier to emails_full and calculate the confusion matrix: conf_full
+conf_full <- table(emails_full$spam, spam_classifier(emails_full$avg_capital_seq))
+
+# Calculate the accuracy with conf_full: acc_full
+acc_full <- sum(diag(conf_full)) / sum(conf_full)
+
+# Print acc_full
+acc_full
+
+# Your model no longer fits the small dataset perfectly but it fits the big dataset better. You increased the bias on the model and caused it to generalize better over the complete dataset. While the first classifier overfits the data, an accuracy of 73% is far from satisfying for a spam filter. Maybe you can provide us with a better model in a later exercise! 
+
+# ***************************************************************************************
+# Interpretability
+# Which of the following models do you think would have the highest interpretability? 
+# Remember that a high interpretability usually implies a high bias.
+
+# It can help to try to describe what the model has to do to classify instances. Usually if you are able to describe what all aspects of a model do and what they mean, the model is quite interpretable.
+
+# Wrong Ans: A spam filter uses various rules on 10 attributes to classify whether an email is spam or not. It uses attributes such as specific word count, character count, and so on.
+# Incorrect! Allowing a learning algorithm to use a lot of attributes will decrease the bias on the model. This will generally increase the complexity. 
+
+# Ans: A model predicts whether a person with certain attributes is male or female. It uses one threshold on the height attribute to make its prediction.
+# This is a very simple and general classification. Note that this would not neccesarily be a good model. 
+
+# ***************************************************************************************
+# Decision Tree
+# As a big fan of shipwrecks, you decide to go to your local library and look up data about Titanic passengers. You find a data set of 714 passengers, and store it in the titanic data frame (Source: Kaggle). Each passenger has a set of features - Pclass, Sex and Age - and is labeled as survived (1) or perished (0) in the Survived column.
+# To test your classification skills, you can build a decision tree that uses a person's age, gender, and travel class to predict whether or not they survived the Titanic. The titanic data frame has already been divided into training and test sets (named train and test).
+# In this exercise, you'll need train to build a decision tree. You can use the rpart() function of the rpart package for this. Behind the scenes, it performs the steps that Vincent explained in the video: coming up with possible feature tests and building a tree with the best of these tests.
+# Finally, a fancy plot can help you interpret the tree. You will need the rattle, rpart.plot and RColorBrewer packages to display this.
+# train 70% test 30%
+
+titanic_full <- read.csv("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/titanic_dataset.csv")
+str(titanic_full)
+
+good_data <- complete.cases(titanic_full[c(2, 3, 5, 6)])
+titanic <- titanic_full[good_data, c(2, 3, 5, 6)]
+str(titanic)
+titanic$Survived <- as.factor(titanic$Survived)
+titanic$Pclass <- factor(titanic$Pclass, ordered = TRUE, levels = c(3, 2, 1))
+head(titanic)
+
+sampled_titanic <- titanic[sample(nrow(titanic)), ]
+train <- sampled_titanic[1:round(0.7 * nrow(titanic)), ]
+test <- sampled_titanic[(round(0.7 * nrow(titanic)) + 1):nrow(titanic), ]
+
+# Set random seed. Don't remove this line
+set.seed(1)
+
+# Load the rpart, rattle, rpart.plot and RColorBrewer package
+library(rpart)
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+
+# Fill in the ___, build a tree model: tree
+tree <- rpart(Survived ~ ., data = train, method = "class")
+  
+# Draw the decision tree
+rpart.plot(tree)
+fancyRpartPlot(tree)
+
+# ***************************************************************************************
+# Classify with decision tree
+# The previous learning step involved proposing different tests on which to split nodes and then to select the best tests using an appropriate splitting criterion. You were spared from all the implementation hassles that come with that: the rpart() function did all of that for you. 
+# Now you are going to classify the instances that are in the test set. As before, the data frames titanic, train and test are available in the workspace. You'll only want to work with the test set, though.
+
+# Predict the values of the test set: pred
+pred <- predict(tree, test, type = "class")
+
+# Construct the confusion matrix: conf
+conf <- table(test$Survived, pred)
+
+# Print out the accuracy
+acc <- sum(diag(conf)) / sum(conf)
+acc
+
+# ***************************************************************************************
+# Pruning the tree
+# A like-minded shipwreck fanatic is also doing some Titanic predictions. He passes you some code that builds another decision tree model. The resulting model, tree, seems to work well but it's pretty hard to interpret. Generally speaking, the harder it is to interpret the model, the more likely you're overfitting on the training data.
+# You decide to prune his tree. This implies that you're increasing the bias, as you're restricting the amount of detail your tree can model. Finally, you'll plot this pruned tree to compare it to the previous one.
+
+# Calculation of a complex tree
+tree <- rpart(Survived ~ ., train, method = "class", control = rpart.control(cp=0.00001))
+
+# Draw the complex tree
+rpart.plot(tree)
+fancyRpartPlot(tree)
+
+# Prune the tree: pruned
+# Use the prune() method to shrink tree to a more compact tree, pruned. 
+# Also specify the cp argument to be 0.01. This is a complexity parameter. 
+# It basically tells the algorithm to remove node splits that do not sufficiently decrease the impurity.
+pruned <- prune(tree, cp = 0.01)
+
+# Draw pruned
+rpart.plot(pruned)
+fancyRpartPlot(pruned)
+
+# Another way to check if you overfit your model is by comparing the accuracy on the training set with the accuracy on the test set. You'd see that the difference between those two is smaller for the simpler tree. You can also set the cp argument while learning the tree with rpart() using rpart.control
+# A 25-year old man was in first class on the Titanic. Using the tree model that's shown on the right, it's your task to predict whether he survived the Titanic accident or not. 
+#The model will predict that the man survives the disaster. However if you take a look of the distribution of classes in the leaf, you see that the model does not split the classes perfectly, so there's no way to be absolutely sure. 
+
+# ***************************************************************************************
+# Splitting Criteria
+
+# In this exercise, you'll build two decision trees based on different splitting criteria. In the video you've learned about information gain: the higher the gain when you split, the better. However, the standard splitting criterion of rpart() is the Gini impurity.
+# It is up to you now to compare the information gain criterion with the Gini impurity criterion: how do the accuracy and resulting trees differ?
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Train and test tree with information gain criterion
+tree_i <- rpart(Survived ~ ., data = train, method = "class", 
+                parms = list(split = "information"))
+pred_i <- predict(tree_i, test, type = "class")
+fancyRpartPlot(tree_i)
+conf_i <- table(test$Survived, pred_i)
+acc_i <- sum(diag(conf_i)) / sum(conf_i)
+acc_i
+
+# As you can see, using a different splitting criterion can influence the resulting model of your learning algorithm. However, the resulting trees are quite similar. The same variables are often present in both trees and the accuracy on the test set is comparable
+
+# ***************************************************************************************
+# K-nearest Decision tree: Instance based learning
+# Let's return to the tragic titanic dataset. This time, you'll classify its observations differently, with k-Nearest Neighbors (k-NN). However, there is one problem you'll have to tackle first: scale.
+# As you've seen in the video, the scale of your input variables may have a great influence on the outcome of the k-NN algorithm. In your case, the Age is on an entirely different scale than Sex and Pclass, hence it's best to rescale first!
+  
+# Refer confusion matrix doc for the formula
+
+# Store the Survived column of train and test in train_labels and test_labels
+train_labels <- train$Survived
+test_labels <- test$Survived
+
+# Copy train and test to knn_train and knn_test without the Survived column
+knn_train <- train[-1]
+knn_test <- test[-1]
+
+train$Pclass <- as.numeric(train$Pclass)
+test$Pclass <- as.numeric(test$Pclass)
+knn_train$Pclass <- as.numeric(knn_train$Pclass)
+knn_test$Pclass <- as.numeric(knn_test$Pclass)
+
+# Drop the Survived column from knn_train and knn_test. Tip: dropping a column named column in a data frame named df can be done as follows: df$column <- NULL.
+
+# Normalize Pclass
+# For this instruction, you don't have to write any code. Pclass is an ordinal value between 1 and 3. Have a look at the code that normalizes this variable in both the training and the test set. To define the minimum and maximum, only the training set is used; we can't use information on the test set (like the minimums or maximums) to normalize the data.
+min_class <- min(train$Pclass)
+max_class <- max(train$Pclass)
+knn_train$Pclass <- (knn_train$Pclass - min_class) / (max_class - min_class)
+knn_test$Pclass <- (knn_test$Pclass - min_class) / (max_class - min_class)
+
+# Normalize Age
+min_age <- min(train$Age)
+max_age <- max(train$Age)
+knn_train$Age <- (knn_train$Age - min_age) / (max_age - min_age)
+knn_test$Age <- (knn_test$Age - min_age) / (max_age - min_age)
+
+# The objective is get the scores between 0 and 1 only! z-scores on the other hand can be greater than 1. Hence, we need to use the above formula only
+
+# Also the sex is numbered as 1 and 2 so
+knn_train$Sex <- as.numeric(train$Sex) - 1
+knn_test$Sex <- as.numeric(test$Sex) - 1
+
+# As you may have noticed, preprocessing data can be a tedious job. Luckily there are packages available for that. Coding it yourself is always good to gain some intuition though. Note, that the variable Sex already took values between 0 and 1, hence did not require normalization. 
+
+# ***************************************************************************************
+# The knn() function
+# Now that you have your preprocessed data - available in your workspace as knn_train, knn_test, train_labels and test_labels - you are ready to start with actually classifying some instances with k-Nearest Neighbors.
+# To do this, you can use the knn() function which is available from the class package. 
+
+install.packages('class')
+library(class)
+
+# Fill in the ___, make predictions using knn: pred
+# The function takes four arguments:
+
+# train: observations in the training set, without the class labels, available in knn_train
+# test: observations in the test, without the class labels, available in knn_test
+# cl: factor of true class labels of the training set, available in train_labels
+# k: number of nearest neighbors you want to consider, 5 in our case
+
+pred <- knn(train = knn_train, test = knn_test, cl = train_labels, k = 5)
+
+# Construct the confusion matrix: conf
+conf <- table(test_labels, pred)
+
+# Print out the confusion matrix
+conf
+
+# Let's take this to the next level by iterating over different values of k and comparing the accuracies. 
+
+# ***************************************************************************************
+# What should be the value of K?
+# A big issue with k-Nearest Neighbors is the choice of a suitable k. How many neighbors should you use to decide on the label of a new observation? Let's have R answer this question for us and assess the performance of k-Nearest Neighbor classification for increasing values of k.
+
+range <- 1:(0.2 * nrow(knn_train))
+accs <- rep(NA, length(range)) 
+
+for(k in range) {
+  pred <- knn(train = knn_train, test = knn_test, cl = train_labels,
+              k = k)
+  conf <- table(test_labels, pred)
+  accs[k] <- sum(diag(conf)) / sum(conf)
+}
+
+# Plot the accuracies. Title of x-axis is "k".
+plot(x = range, y = accs, xlab = "k")
+
+# Calculate the best k
+which.max(accs)
+
+# For an even more robust estimate of the best k, you could use cross validation that you've learned about in Chapter 2. 
+
+# ***************************************************************************************
+# Interpreting voronoi diagram
+# refer confusion matrix doc
+
+# ***************************************************************************************
+# Creating ROC curves
+
+# In this exercise you will work with a medium sized dataset about the income of people given a set of features like education, race, sex, and so on. Each observation is labeled with 1 or 0: 1 means the observation has annual income equal or above $50,000, 0 means the observation has an annual income lower than $50,000 (Source: UCIMLR). This label information is stored in the income variable.
+# A tree model, tree, is learned for you on a training set, that tries to predict income based on all other variables in the dataset.
+# In previous exercises, you used this tree to make class predictions, by setting the type argument in predict() to "class".
+# To build an ROC curve, however, you need the probabilities that the observations are positive. In this case, you'll want to to predict the probability of each observation in the test set (already available) having an annual income equal to or above $50,000. Now, you'll have to set the type argument of predict() to "prob".
+
+# Set random seed. Don't remove this line
+set.seed(1)
+
+train <- read.table(file = "C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/adult.data.txt", header = F, sep = ",")
+head(train)
+col_names <- c("age", "workclass", "fnlwgt", "education", "education_num",
+               "marital_status", "occupation", "relationship", "race", "sex", "capital_gain",
+               "capital_loss", "hours_per_week", "native_country", "income")
+colnames(train) <- col_names
+train <- tbl_df(train)
+head(train)
+str(train)
+summary(train)
+
+test <- read.table(file = "C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/adult.test.txt", 
+                   header = F, sep = ",", skip = 1)
+head(test)
+colnames(test) <- col_names
+
+library(psych)
+describeBy(train, train$workclass)
+
+library(ggplot2)
+ggplot(train, aes(x = workclass)) + geom_bar()
+
+# Data cleaning
+train[which(train$workclass == " ?"), 2] <- " Private"
+train[which(train$workclass == " Never-worked"), 2] <- " Without-pay"
+levels(train$workclass)
+str(train)
+
+# Build a tree on the training set: tree
+library(rpart)
+tree <- rpart(income ~ ., train, method = "class")
+
+# Predict probability values using the model: all_probs
+all_probs <- predict(tree, test, type = "prob")
+
+# Print out all_probs
+print(all_probs)
+str(all_probs)
+dim(all_probs)
+class(all_probs)
+head(all_probs)
+
+# Select second column of all_probs: probs
+probs <- all_probs[, 2]
+probs <- predict(tree, test, type = "prob")[,2]
+
+# ***************************************************************************************
+# Creating ROC Curves part II
+
+# Now that you have the probabilities of every observation in the test set belonging to the positive class (annual income equal or above $50,000), you can build the ROC curve.
+# You'll use the ROCR package for this. First, you have to build a prediction object with prediction(). Next, you can use performance() with the appropriate arguments to build the actual ROC data and plot it.
+
+install.packages('ROCR')
+library(ROCR)
+
+# Make a prediction object: pred
+# Use prediction() with probs and the true labels of the test set (in the income column of test) to get a prediction object. Assign the result to pred.
+pred <- prediction(probs, labels = test$income)
+
+# Make a performance object: perf
+# Use performance() on pred to get the ROC curve. The second and third argument of this function should be "tpr" and "fpr". These stand for true positive rate and false positive rate, respectively. Assign to result to perf.
+perf <- performance(pred, measure = "tpr", "fpr")
+
+# Plot this curve
+plot(perf)
+
+# A single look at the ROC curve gives you an idea of the classifier's quality. If the curve comes close to the upper-left corner, it's pretty good. To actually quantify "good", head over to the next exercise! 
+
+# ***************************************************************************************
+# The area under the curve (AUC) for ROC curves
+
+# The same package you used for constructing the ROC curve can be used to quantify the area under the curve, or AUC. The same tree model is loaded into your workspace, and the test set's probabilities have again been calculated for you.
+# Again using the ROCR package, you can calculate the AUC. The use of prediction() is identical to before. However, the performance() function needs some tweaking.
+
+# Use performance() with this prediction object to get the ROC curve. The second argument of this function should be "auc". This stands for area under curve. Assign to perf
+perf2 <- performance(pred, "auc")
+
+# Print out the AUC
+paste(perf2@y.name, perf2@y.values[[1]])
+perf2@y.values[[1]]
+
+# ***************************************************************************************
+# Comparing the methods
+
+# In this exercise you're going to assess two models: a decision tree model and a k-Nearest Neighbor model. You will compare the ROC curves of these models to draw your conclusions.
+
+# It is your job to use your knowledge about the ROCR package to plot two ROC curves, one for each classifier. The assigned probabilities for the observations in the test set are loaded into your workspace: probs_t for the decision tree model, probs_k for k-Nearest Neighbors.
+
+emails <- read.table("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/spambase.data.txt", sep = ",")
+emails_names <- read.table("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/spambase.names.csv", sep = ",")
+
+emails_names <- as.character(emails_names[, 1])
+emails_names <- c(emails_names, "spam")
+
+colnames(emails) <- emails_names
+emails$spam <- as.factor(emails$spam)
+
+# split the data in train 70% and test 30%
+sampled_emails <- emails[sample(nrow(emails)), ]
+train <- sampled_emails[1: round(0.7 * nrow(emails)), ]
+test <- sampled_emails[(round(0.7 * nrow(emails)) + 1):nrow(emails), ]
+
+# create Decision Tree and knn models
+model_dt <- rpart(formula = spam ~., data = train)
+library(class)
+model_knn <- knn(train[-58], test[-58], cl = train$spam, k = 5, prob = TRUE)
+
+# Predict using the two models
+pred_dt2 <- predict(model_dt, test[-58], type = "class")
+pred_dt <- predict(model_dt, test[-58], type = "prob")
+probs_t <- pred_dt[, 2]
+
+
+pred_knn <- attributes(model_knn)
+probs_k <- pred_knn$prob
+
+# Make the prediction objects for both models: pred_t, pred_k
+pred_t <- prediction(probs_t, test$spam)
+
+pred_k <- prediction(probs_k, test$spam)
+
+# Make the performance objects for both models: perf_t, perf_k
+perf_t <- performance(pred_t, "tpr", "fpr")
+
+perf_k <- performance(pred_k, "tpr", "fpr")
+
+# draw_roc_lines() function
+draw_roc_lines <- function(tree, knn) {
+  if (!(class(tree)== "performance" && class(knn) == "performance") ||
+      !(attr(class(tree),"package") == "ROCR" && attr(class(knn),"package") == "ROCR")) {
+    stop("This predefined function needs two performance objects as arguments.")
+  } else if (length(tree@x.values) == 0 | length(knn@x.values) == 0) {
+    stop('This predefined function needs the right kind of performance objects as arguments. Are you sure you are creating both objects with arguments "tpr" and  "fpr"?')
+  } else {
+    plot(0,0, 
+         type = "n", 
+         main = "ROC Curves", 
+         ylab = "True positive rate", 
+         xlab = "False positive rate", 
+         ylim = c(0,1), 
+         xlim = c(0,1))
+    lines(tree@x.values[[1]], tree@y.values[[1]], type = "l", lwd = 2, col = "red")
+    lines(knn@x.values[[1]], knn@y.values[[1]], type = "l", lwd = 2, col = "green")
+    legend("bottomright", c("DT","KNN"), lty=c(1,1),lwd=c(2.5,2.5),col=c("red","green"))
+  }}
+
+# Draw the ROC lines using draw_roc_lines()
+draw_roc_lines(perf_t, perf_k)
+
+conf1 <- table(test$spam, pred_dt2)
+conf2 <- table(test$spam, model_knn)
+
+acc1 <- sum(diag(conf1)) / sum(conf1)
+acc2 <- sum(diag(conf2)) / sum(conf2)
+
+acc1
+acc2
+
+# ***************************************************************************************
+# Linear Regression
+
+# The kang_nose dataset and nose_width_new are already loaded in your workspace.
+
+# Plot nose length as function of nose width.
+plot(kang_nose, xlab = "nose width", ylab = "nose length")
+
+# Fill in the ___, describe the linear relationship between the two variables: lm_kang
+lm_kang <- lm(nose_length ~ nose_width, data = kang_nose)
+
+# Print the coefficients of lm_kang
+lm_kang$coefficients
+coef(lm_kang)
+
+# Predict and print the nose length of the escaped kangoroo
+predict(lm_kang, nose_width_new)
+
+# ***************************************************************************************
+# RMSE
+
+# kang_nose is pre-loaded in your workspace
+
+# Build model and make plot
+lm_kang <- lm(nose_length ~ nose_width, data=kang_nose)
+plot(kang_nose, xlab = "nose width", ylab = "nose length")
+abline(lm_kang$coefficients, col = "red")
+
+# Apply predict() to lm_kang: nose_length_est
+nose_length_est <- predict(lm_kang)
+
+# Calculate difference between the predicted and the true values: res
+res <- kang_nose$nose_length - nose_length_est
+
+# Calculate RMSE, assign it to rmse and print it
+rmse <- sqrt(sum(res^2) / nrow(kang_nose))
+rmse
+
+# ***************************************************************************************
+# Peformance measure R-Squared
+# Calculate the residual sum of squares: ss_res
+ss_res <- sum(res^2)
+
+# Determine the total sum of squares: ss_tot
+ss_tot <- sum((kang_nose$nose_length - mean(kang_nose$nose_length))^2)
+
+# Calculate R-squared and assign it to r_sq. Also print it.
+r_sq <- 1 - (ss_res / ss_tot)
+r_sq
+
+# Apply summary() to lm_kang
+summary(lm_kang)
+
+# **************************************************************************************
+# Another take at regression: Be critical
+# You are given data on GDP per capita and its relation to the percentage of urban population for several UN countries, measured in the year 2014 (Source: The World Bank). This dataset is stored in a data frame world_bank_train and has two variables: cgdp and urb_pop.
+# Have a look at the data, do you think a relationship between the two is plausible? Try to set up a linear model for the percentage of urban population based on the GDP per capita.
+# Afghanistan has a GDP per capita of 413 USD, stored in cgdp_afg, but its urban population in 2014 is not known yet. Can you predict the outcome using your model?
+
+# world_bank_train and cgdp_afg is available for you to work with
+
+# Plot urb_pop as function of cgdp
+plot(world_bank_train$urb_pop ~ world_bank_train$cgdp)
+
+# Set up a linear model between the two variables: lm_wb
+lm_wb <- lm(urb_pop ~ cgdp, data = world_bank_train)
+
+# Add a red regression line to your scatter plot
+abline(coef(lm_wb), col = "red")
+
+# Summarize lm_wb and select R-squared
+summary(lm_wb)$r.squared
+
+# Predict the urban population of afghanistan based on cgdp_afg
+predict(lm_wb, cgdp_afg)
+
+# Although, you must admit, your linear model is barely acceptable and far from satisfying. R-squared is quite low and the regression line doesn't seem to fit well, so is the predicted 45% to be trusted? Maybe you can improve it in the next exercise? 
+
+# **************************************************************************************
+# Non-linear but still linear: Log-linear model
+
+# In the last exercise, your scatter plot didn't show a strong linear relationship. You confirmed this with the regression line and R2
+# To improve your model, take a step back and study the nature of the data. The predictor variable is numerical, while the response variable is expressed in percentiles. It would make more sense if there were a linear relationship between the percentile changes of the GDP / capita and the changes in the response.
+# To obtain an estimation of percentile changes, take the natural logarithm of the GDP / capita and use this as your new predictor variable. A model solution to the previous exercise is included in the editor; up to you to make some changes.
+
+# world_bank_train and cgdp_afg is available for you to work with
+
+# Plot: change the formula and xlab
+plot(urb_pop ~ log(cgdp), data = world_bank_train, 
+     xlab = "log(GDP per Capita)", 
+     ylab = "Percentage of urban population")
+
+# Linear model: change the formula
+lm_wb <- lm(urb_pop ~ log(cgdp), data = world_bank_train)
+
+# Add a red regression line to your scatter plot
+abline(lm_wb$coefficients, col = "red")
+
+# Summarize lm_wb and select R-squared
+summary(lm_wb)$r.squared
+
+# Predict the urban population of afghanistan based on cgdp_afg
+predict(lm_wb, cgdp_afg)
+
+# Your scatter plot now shows a stronger linear relationship! This model predicts the urban population of Afghanistan to be around 26%, what a huge difference with the 45% you had before! In the next exercise you will compare the R-squared measures for both these linear regression attempts. 
+
+# **************************************************************************************
+# The second model clearly is better to predict the percentage of urban population based on the GDP per capita. The type of the second model is called log-linear, as you take the logarithm of your predictor variable, but leave your response variable unchanged. Overall your model still has quite a lot of unexplained variance. If you want more precise predictions, you'll have to add other relevant variables in a multivariable linear model.
+
+# **************************************************************************************
+# Multi variate linear regression
+
+# In the video, Vincent showed you a multi-linear model for net sales based on advertisement and competition. The dataset is available in the workspace as shop_data.
+# In this exercise you'll add even more predictors: inventory (inv), the size of the district (size_dist) and the shop size (sq_ft).
+# Your job is to set up this model, verify if the fit is good and finally measure the accuracy. Make sure you interpret the results at every step!
+
+# shop_data has been loaded in your workspace
+
+# Add a plot: sales as a function of inventory. Is linearity plausible?
+plot(sales ~ sq_ft, shop_data)
+plot(sales ~ size_dist, shop_data)
+plot(sales ~ inv, shop_data)
+
+
+# Build a linear model for net sales based on all other variables: lm_shop
+lm_shop <- lm(sales ~ ., data = shop_data)
+
+# Summarize lm_shop
+summary(lm_shop)
+
+# **************************************************************************************
+# Testing the assumptions
+
+# shop_data, shop_new and lm_shop have been loaded in your workspace
+
+# Plot the residuals in function of your fitted observations
+plot(y = lm_shop$residuals, x = lm_shop$fitted.values)
+
+# Make a Q-Q plot of your residual quantiles
+qqnorm(lm_shop$residuals, ylab = "Residual Quantiles")
+
+# Summarize your model, are there any irrelevant predictors?
+summary(lm_shop)
+
+# Predict the net sales based on shop_new.
+predict(lm_shop, shop_new)
+
+# There is no clear pattern in your residuals. Moreover, the residual quantiles are approximately on one line. From the small p-values you can conclude that every predictor is important! 
+
+# **************************************************************************************
+# Generalization
+
+# The test's RMSE is only slightly larger than the training RMSE. This means that your model generalizes well to unseen observations. You can conclude the logarithm transformation did improve your model. It fits your data better and does a good job at generalizing! 
+
+# **************************************************************************************
+# Non- Parametric: KNN algorithm for multiple regression
+
+# In the video, Gilles shortly showed you how to set up your own k-NN algorithm. Now it's time to inspect up close how it works.
+# We went ahead and defined a function my_knn, that contains a k-NN algorithm. Its arguments are: - x_pred: predictor values of the new observations (this will be the cgdp column of world_bank_test), - x: predictor values of the training set (the cgdp column of world_bank_train), - y: corresponding response values of the training set (the urb_pop column of world_bank_train), - k: the number of neighbors (this will be 30).
+# The function returns the predicted values for your new observations (predict_knn).
+# You'll apply a k-NN algorithm to the GDP / capita of the countries in world_bank_test to predict their percentage of urban population.
+
+# For the first instruction, you don't have to code anything! Just inspect the my_knn function and try to identify the following steps:
+# Calculation of dist, the absolute distance between the new observation and your training sample;
+# Calculation of sort_index, the order of dist, using order(); This function returns the indices of elements in dist, in ascending order. So sort_index[1] will return the index of the smallest distance in dist, sort_index[2] the second smallest, ...
+# Calculation of predict_knn[i], the mean() of the values in y that correspond to the k smallest distances. Note that sort_index[1:k] will return the indices of the k smallest elements in dist. y contains the percentages of urban population in the training set.
+# Apply the algorithm on the test set, using 30 neighbors. Assign the predictions to test_output. If you're not sure which arguments to use, have a look at the description!
+# Lastly, have a look at the predicted outcomes. These plots are already coded.
+
+###
+# You don't have to change this!
+# The algorithm is already coded for you; 
+# inspect it and try to understand how it works!
+my_knn <- function(x_pred, x, y, k){
+  m <- length(x_pred)
+  predict_knn <- rep(0, m)
+  for (i in 1:m) {
+    
+    # Calculate the absolute distance between x_pred[i] and x
+    dist <- abs(x_pred[i] - x)
+    
+    # Apply order() to dist, sort_index will contain 
+    # the indices of elements in the dist vector, in 
+    # ascending order. This means sort_index[1:k] will
+    # return the indices of the k-nearest neighbors.
+    sort_index <- order(dist)    
+    
+    # Apply mean() to the responses of the k-nearest neighbors
+    predict_knn[i] <- mean(y[sort_index[1:k]])    
+    
+  }
+  return(predict_knn)
+}
+###
+
+# world_bank_train and world_bank_test are pre-loaded
+
+# Apply your algorithm on the test set: test_output
+test_output <- my_knn(world_bank_test$cgdp, world_bank_train$cgdp, world_bank_train$urb_pop, 30)
+
+# Have a look at the plot of the output
+plot(world_bank_train, 
+     xlab = "GDP per Capita", 
+     ylab = "Percentage Urban Population")
+points(world_bank_test$cgdp, test_output, col = "green")
+
+# Now let's compare the k-NN results with the linear regression to see which one is the best model! 
+
+# **************************************************************************************
+# Parametric vs Non-parametric
+# So now you've build three different models for the same data: - a simple linear model, lm_wb, - a log-linear model, lm_wb_log and - a non-parametric k-NN model. This k-NN model is actually simply a function that takes test and training data and predicts response variables on the fly: my_knn().
+# These objects are all stored in the workspace, as are world_bank_train and world_bank_test.
+# Have a look at the sample code on the right, that shows the first steps for building a fancy plot. In the end, three lines should be plotted that represent the predicted responses for the test set, together with the true responses.
+# You'll also calculate the RMSE of the test set for the simple linear, log-linear and k-NN regression. Have a look at the results, which regression approach performs the best?
+
+# world_bank_train and world_bank_test are pre-loaded
+# lm_wb and lm_wb_log have been trained on world_bank_train
+# The my_knn() function is available
+
+# Define ranks to order the predictor variables in the test set
+ranks <- order(world_bank_test$cgdp)
+
+# Scatter plot of test set
+plot(world_bank_test,
+     xlab = "GDP per Capita", ylab = "Percentage Urban Population")
+
+# Predict with simple linear model and add line
+test_output_lm <- predict(lm_wb, data.frame(cgdp = world_bank_test$cgdp))
+lines(world_bank_test$cgdp[ranks], test_output_lm[ranks], lwd = 2, col = "blue")
+
+# Predict with log-linear model and add line
+test_output_lm_log <- predict(lm_wb_log, data.frame(cgdp = world_bank_test$cgdp))
+lines(world_bank_test$cgdp[ranks], test_output_lm_log[ranks], lwd = 2, col = "red")
+
+# Predict with k-NN and add line
+test_output_knn <- my_knn(world_bank_test$cgdp, world_bank_train$cgdp, world_bank_train$urb_pop, 30)
+lines(world_bank_test$cgdp[ranks], test_output_knn[ranks], lwd = 2, col = "green")
+
+# Calculate RMSE on the test set for simple linear model
+sqrt(mean( (test_output_lm - world_bank_test$urb_pop) ^ 2))
+
+# Calculate RMSE on the test set for log-linear model
+sqrt(mean( (test_output_lm_log - world_bank_test$urb_pop) ^ 2))
+
+# Calculate RMSE on the test set for k-NN technique
+sqrt(mean( (test_output_knn - world_bank_test$urb_pop) ^ 2))
+
+# The log-linear model seems to give the best RMSE on the test set! That was all for regression. Time to take your first serious steps in the world of unsupervised learning. But fear not! Gilles is there to guide you! 
+
+# **************************************************************************************
+# Clustering Detailed
+# Remember the seeds dataset from Chapter 2 which you clustered using the k-means method? Well, we've found the labels of the seeds. They are stored in the vector seeds_type; there were indeed three types of seeds! 
+# Set random seed. Don't remove this line.
+set.seed(100)
+
+seeds <- read.table("C:/MANOJ/Personal/IBM DS/dataCamp/Machine Learning/seeds_dataset.txt")
+head(seeds)
+colnames(seeds) <- c("area", "perimeter", "compactness", "length", "width", 
+                     "asymmetry", "groove_length", "seed")
+
+head(seeds)
+seeds$seed <- as.factor(seeds$seed)
+
+# Do k-means clustering with three clusters, repeat 20 times: seeds_km
+seeds_km <- kmeans(seeds[-8], centers = 3, nstart = 20)
+
+# Print out seeds_km
+seeds_km
+
+# Compare clusters with actual seed types. Set k-means clusters as rows
+table(seeds$seed, seeds_km$cluster)
+
+# Plot the length as function of width. Color by cluster
+plot(seeds$length ~ seeds$width, col = seeds_km$cluster)
+
+# **************************************************************************************
+# Effect of nstart
+# Set random seed. Don't remove this line.
+set.seed(100)
+
+# Apply kmeans to seeds twice: seeds_km_1 and seeds_km_2
+seeds_km_1 <- kmeans(seeds[-8], centers = 5, nstart = 1)
+seeds_km_2 <- kmeans(seeds[-8], centers = 5, nstart = 1)
+
+seeds_km_1 <- kmeans(seeds[-8], centers = 5, nstart = 20)
+seeds_km_2 <- kmeans(seeds[-8], centers = 5, nstart = 20)
+
+# Return the ratio of the within cluster sum of squares
+seeds_km_1$tot.withinss / seeds_km_2$tot.withinss
+
+# Compare the resulting clusters
+table(seeds_km_1$cluster, seeds_km_2$cluster)
+
+# For consistent and decent results, you should set nstart > 1 or determine a prior estimation of your centroids. 
+
+# **************************************************************************************
+# SCREE plot
+install.packages('cluster.datasets')
+library(cluster.datasets)
+
+# Let's move on to some new data: school results! You're given a dataset school_result containing school level data recording reading and arithmetic scores for each school's 4th and 6th graders. (Source: cluster.datasets package). We're wondering if it's possible to define distinct groups of students based on their scores and if so how many groups should we consider?
+# Your job is to cluster the schools based on their scores with k-means, for different values of k. On each run, you'll record the ratio of the within cluster sum of squares to the total sum of squares. The scree plot will tell you which k is optimal!
+
+# Set random seed. Don't remove this line.
+set.seed(100)
+
+# Explore the structure of your data
+data(new.haven.school.scores)
+school_results <- new.haven.school.scores[-1]
+
+str(school_results)
+
+# Initialise ratio_ss 
+ratio_ss <- rep(0, 7)
+
+# Finish the for-loop. 
+for (k in 1:7) {
+  # Apply k-means to school_result: school_km
+  school_km <- kmeans(school_results, k, nstart = 20)
+  
+  # Save the ratio between of WSS to TSS in kth element of ratio_ss
+  ratio_ss[k] <- school_km$tot.withinss / school_km$totss
+}
+  
+# Make a scree plot with type "b" and xlab "k"
+
+plot(ratio_ss, type = "b", xlab = "k")
+  
+# **************************************************************************************
+# You want to choose k such that your clusters are compact and well separated. However, the ratio_ss keeps decreasing as k increases. Hence, if you were to minimize this ratio as function of k, you'd end up with a cluster for every school, which is a meaningless result. You should choose k such that when increasing it, the impact on ratio_ss is not significant. The elbow in the scree plot will help you identify this turning point.
+# Can you tell which of the following values of k will provide a meaningful clustering with overall compact and well separated clusters? 
+# Ans: between 3 and 4
+
+# While the elbow is not always unambiguously identified, it gives you an idea of the amount of clusters you should try out. 
+
+# **************************************************************************************
+# Standardizing data
+
+# The scaling between the run records differ substantially. Moreover, they all share the same unit, so standardizing will not make the interpretation of the clusters any harder! 
+
+# **************************************************************************************
+# Standardized vs non standardized
+
+data(olympic.track.1896.1964)
+complete.cases(olympic.track.1896.1964)
+run_record <- na.omit(olympic.track.1896.1964)
+
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Explore your data with str() and summary()
+str(run_record)
+summary(run_record)
+
+# Cluster run_record using k-means: run_km. 5 clusters, repeat 20 times
+run_km <- kmeans(run_record[-1], centers = 5, nstart = 20)
+
+# Plot the 100m as function of the marathon. Color using clusters
+plot(y = run_record$t.100m, x = run_record$t.10000m, col = run_km$cluster)
+
+# Calculate Dunn's index: dunn_km. Print it.
+install.packages('cluster')
+install.packages('clValid')
+library(cluster)
+library(clValid)
+
+dunn_km <- dunn(clusters = run_km$cluster, Data = run_record)
+
+dunn_km
+
+# **************************************************************************************
+# Standardized vs non-standardized clustering part II
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Standardize run_record, transform to a dataframe: run_record_sc
+run_record_sc <- as.data.frame(scale(run_record[-1]))
+
+# Cluster run_record_sc using k-means: run_km_sc. 5 groups, let R start over 20 times
+run_km_sc <- kmeans(run_record_sc, 5, nstart = 20)
+
+# Plot records on 100m as function of the marathon. Color using the clusters in run_km_sc
+plot(y = run_record$t.100m, x = run_record$t.10000m, col = run_km_sc$cluster)
+
+# Compare the resulting clusters in a nice table
+table(run_km$cluster, run_km_sc$cluster)
+
+# Calculate Dunn's index: dunn_km_sc. Print it.
+dunn_km_sc <- dunn(clusters = run_km_sc$cluster, Data = run_record_sc)
+dunn_km_sc
+
+# The plot now shows the influence of the 100m records on the resulting clusters! Dunn's index is clear about it, the standardized clusters are more compact or/and better separated! 
+
+# **************************************************************************************
+# Hierarchichal clustering
+
+# Single linkage hierarchical clustering can lead to undesirable chaining of your objects.
+# K-means is overall computationally less intensive than bottom-up hierarchical clustering.
+# The dendrogram is a tree that represents the hierarchical clustering. It tells you which clusters merged when.
+# Complete linkage is actually the maximal distance between the objects from any member of one cluster to any member of the other cluster. 
+
+# **************************************************************************************
+# Single Hierarchical Clustering
+
+# Let's return to the Olympic records example. You've already clustered the countries using the k-means algorithm, but this gave you a fixed amount of clusters. We're interested in more!
+# In this exercise, you'll apply the hierarchical method to cluster the countries. Of course, you'll be working with the standardized data. Make sure to visualize your results!
+  
+# Calculate the Euclidean distance matrix of run_record_sc using dist(). Assign it to run_dist. dist() uses the Euclidean method by default.
+# Use the run_dist matrix to cluster your data hierarchically, based on single-linkage. Use hclust() with two arguments. Assign it to run_single.
+# Cut the tree using cutree() at 5 clusters. Assign the result to memb_single.
+# Make a dendrogram of run_single using plot(). If you pass a hierarchical clustering object to plot(), it will draw the dendrogram of this clustering.
+# Draw boxes around the 5 clusters using rect.hclust(). Set the border argument to 2:6, for different colors.
+
+library(stats)
+
+# The dataset run_record_sc has been loaded in your workspace
+
+# Apply dist() to run_record_sc: run_dist
+run_dist <- dist(run_record_sc)
+
+# Apply hclust() to run_dist: run_single
+run_single <- hclust(run_dist, method = "single")
+
+# Apply cutree() to run_single: memb_single
+memb_single <- cutree(run_single, 5)
+
+# Apply plot() on run_single to draw the dendrogram
+plot(run_single)
+
+# Apply rect.hclust() on run_single to draw the boxes
+rect.hclust(tree = run_single, k =5, border = 2:6)
+
+# However, it appears the two islands Samoa and Cook's Islands, who are not known for their sports performances, have both been placed in their own groups. Maybe, we're dealing with some chaining issues? Let's try a different linkage method in the next exercise! 
+
+# **************************************************************************************
+# Complete Hierarchical Clustering
+
+# The clusters of the last exercise weren't truly satisfying. The single-linkage method appears to be placing each outlier in its own cluster. Let's see if complete-linkage agrees with this clustering!
+# In this exercise, you'll repeat some steps from the last exercise, but this time for the complete-linkage method. Visualize your results and compare with the single-linkage results. A model solution to the previous exercise is already available to inspire you. It's up to you to add code for complete-linkage.
+
+# Use the run_dist matrix to cluster your data hierarchically, based on complete-linkage. Use hclust(). Assign it to run_complete.
+# Cut the tree using cutree() at 5 clusters. Assign the result to memb_complete.
+# Make a dendrogram of run_complete using plot().
+# Superimpose boxes with rect.hclust(); set the border argument to 2:6 again.
+# Compare the membership between the single and the complete linkage clusterings, using table().
+
+# run_record_sc is pre-loaded
+
+# Code for single-linkage
+run_dist <- dist(run_record_sc, method = "euclidean")
+run_single <- hclust(run_dist, method = "single")
+memb_single <- cutree(run_single, 5)
+plot(run_single)
+rect.hclust(run_single, k = 5, border = 2:6)
+
+# Apply hclust() to run_dist: run_complete
+run_complete <- hclust(run_dist, method = "complete")
+
+# Apply cutree() to run_complete: memb_complete
+memb_complete <- cutree(run_complete, 5)
+
+# Apply plot() on run_complete to draw the dendrogram
+plot(run_complete)
+
+# Apply rect.hclust() on run_complete to draw the boxes
+rect.hclust(tree = run_complete, k = 5, border = 2:6)
+
+# table() the clusters memb_single and memb_complete. Put memb_single in the rows
+table(memb_single, memb_complete)
+
+# Compare the two plots. The five clusters differ significantly from the single-linkage clusters. That one big cluster you had before, is now split up into 4 medium sized clusters. Have a look at the table you generated as well! 
+
+# **************************************************************************************
+# Hierarchical vs kmeans
+
+# Let's use Dunn's index. Remember, it returns the ratio between the minimum intercluster distance to the maximum intracluster diameter. The dunn() function in R, requires the argument clusters, indicating the cluster partitioning, the Data and a method to determine the distance. In this case, that's "euclidean", which is the default.
+# Your job is to calculate Dunn's index for all three clusterings and compare the clusters to each other. The R objects you calculated in the previous exercises are already available in the workspace.
+
+# run_record_sc, run_km_sc, memb_single and memb_complete are pre-calculated
+
+# Set random seed. Don't remove this line.
+set.seed(100)
+
+# Dunn's index for k-means: dunn_km
+dunn_km <- dunn(clusters = run_km_sc$cluster, Data = run_record_sc)
+
+# Dunn's index for single-linkage: dunn_single
+dunn_single <- dunn(clusters = memb_single, Data = run_record_sc)
+
+# Dunn's index for complete-linkage: dunn_complete
+dunn_complete <- dunn(clusters = memb_complete, Data = run_record_sc)
+
+# Compare k-means with single-linkage
+table(run_km_sc$cluster, memb_single)
+
+# Compare k-means with complete-linkage
+table(run_km_sc$cluster, memb_complete)
+
+# The table shows that the clusters obtained from the complete linkage method are similar to those of k-means. Now it's up to you to compare the values of Dunn's index and decide which method returns the best separated and most compact clusters. 
+
+# **************************************************************************************
+# Are you satisfied with this result? The single-linkage method that caused chaining effects, actually returned the most compact and separated clusters . If you think about, it can make sense. The simple linkage method puts every outlier in its own cluster, increasing the intercluster distances and reducing the diameters, hence giving a higher Dunn's index. Therefore, you could conclude that the single linkage method did a fine job identifying the outliers. However, if you'd like to report your clusters to the local newspapers, then complete linkage or k-means are probably the better choice! 
+
+# **************************************************************************************
+# Clustering US states based on criminal activity
+
+# Your client has provided you with a dataset, crime_data, containing info on the crimes committed in each of the 50 US states and the percentage of urban population (Source: Edureka). He'd like you to group the states in 4 clusters. He didn't specify which similarity to use, but the euclidean distance seems acceptable, don't you agree?
+# You decide to try out two techniques: k-means and single-linkage hierarchical clustering. You then want to compare the results by calculating the Dunn's indices to make a conclusion. Which clustering will you deliver to your client?
+
+# Scale the data using scale(). Call the scaled dataset crime_data_sc.
+# Apply kmeans() to this scaled dataset. You want 4 clusters. Assign the result to crime_km. Set the nstart argument to 20 to achieve a robust result.
+# Apply single-linkage hierarchical clustering by following these steps:
+#   Calculate the distance matrix using dist(). Call it dist_matrix.
+# Call hclust() to perform the single-linkage hierarchical clustering, use dist_matrix here. Call the resulting object crime_single.
+# Cut the tree in 4 clusters with cutree(). Call the result memb_single.
+# Use dunn() to calculate the the Dunn's index. You should use crime_km$cluster as a first argument to calculate this for the k-means clustering, call it dunn_km. Use memb_single as a first argument to calculate this for the hierarchical clustering, call it dunn_single.
+# Print out the results in dunn_km and dunn_single.
+
+# Set random seed. Don't remove this line.
+set.seed(1)
+
+# Scale the dataset: crime_data_sc
+crime_data_sc <- as.data.frame(scale(crime_data))
+
+# Perform k-means clustering: crime_km
+crime_km <- kmeans(crime_data_sc, centers = 4, nstart = 20)
+
+# Perform single-linkage hierarchical clustering
+## Calculate the distance matrix: dist_matrix
+dist_matrix <- dist(crime_data_sc, method = "euclidean")
+
+## Calculate the clusters using hclust(): crime_single
+crime_single <- hclust(dist_matrix, method = "single")
+
+## Cut the clusters using cutree: memb_single
+memb_single <- cutree(crime_single, k =4)
+
+# Calculate the Dunn's index for both clusterings: dunn_km, dunn_single
+dunn_km <- dunn(clusters = crime_km$cluster, Data = crime_data_sc)
+dunn_single <- dunn(clusters = memb_single, Data = crime_data_sc)
+
+# Print out the results
+dunn_km
+dunn_single
